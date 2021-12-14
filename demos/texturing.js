@@ -13,7 +13,7 @@
 import PicoGL from "../node_modules/picogl/build/module/picogl.js";
 import {mat4, vec3} from "../node_modules/gl-matrix/esm/index.js";
 
-import {positions, normals, uvs, indices} from "../blender/cube.js"
+import {positions, normals, uvs, indices} from "../blender/brofistsmall.js"
 
 const skyboxPositions = new Float32Array([
     -1.0, 1.0, 1.0,
@@ -176,6 +176,8 @@ async function loadTexture(fileName) {
         app.enable(PicoGL.DEPTH_TEST);
         drawCall.uniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
         drawCall.draw();
+
+        
 
         requestAnimationFrame(draw);
     }

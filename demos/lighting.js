@@ -7,11 +7,11 @@ import {positions, normals, indices} from "../blender/monkey.js"
 // **               Light configuration                **
 // ******************************************************
 
-let ambientLightColor = vec3.fromValues(0.05, 0.05, 0.1);
+let ambientLightColor = vec3.fromValues(0.0, 0.05, 0.1);
 let numberOfLights = 2;
-let lightColors = [vec3.fromValues(1.0, 0.0, 0.2), vec3.fromValues(0.0, 0.1, 0.2)];
-let lightInitialPositions = [vec3.fromValues(5, 0, 2), vec3.fromValues(-5, 0, 2)];
-let lightPositions = [vec3.create(), vec3.create()];
+let lightColors = [vec3.fromValues(1.0, 0.0, 0.4), vec3.fromValues(0.0, 0.1, 0.2), vec3.fromValues(1.0, 0.5, 0.1)];
+let lightInitialPositions = [vec3.fromValues(8, 0, 4), vec3.fromValues(-8, 0, 4)];
+let lightPositions = [vec3.create(), vec3.create(), vec3.create()];
 
 
 // language=GLSL
@@ -49,17 +49,25 @@ let fragmentShader = `
     #version 300 es
     precision highp float;        
     ${lightCalculationShader}        
+
+    uniform samplerCube cubemap;
     
     in vec3 vPosition;    
     in vec3 vNormal;
-    in vec4 vColor;    
+    in vec3 viewDir;    //
+  
+    // in vec4 vColor;    //
     
     out vec4 outColor;        
     
-    void main() {                      
+    void main() { 
+        
+        vec3 reflectedDir = reflect(viewDir, normalize(vNormal));
         // For Phong shading (per-fragment) move color calculation from vertex to fragment shader
         outColor = calculateLights(normalize(vNormal), vPosition);
         // outColor = vColor;
+
+
     }
 `;
 
@@ -70,12 +78,17 @@ let vertexShader = `
         
     layout(location=0) in vec4 position;
     layout(location=1) in vec4 normal;
+    layout(location=2) in vec2 uv; // ?
     
     uniform mat4 viewProjectionMatrix;
-    uniform mat4 modelMatrix;            
+    uniform mat4 modelMatrix;
+    uniform mat3 normalMatrix;
+    uniform vec3 cameraPosition;             
     
-    out vec3 vPosition;    
+    out vec3 vPosition;
+    out vec2 vUv;
     out vec3 vNormal;
+    out vec3 viewDir;  // ?
     out vec4 vColor;
     
     void main() {
@@ -83,10 +96,10 @@ let vertexShader = `
         
         vPosition = worldPosition.xyz;        
         vNormal = (modelMatrix * normal).xyz;
-        
+        vUv = uv; // ?
         // For Gouraud shading (per-vertex) move color calculation from fragment to vertex shader
-        //vColor = calculateLights(normalize(vNormal), vPosition);
-        
+        vColor = calculateLights(normalize(vNormal), vPosition);
+        viewDir = (modelMatrix * position).xyz - cameraPosition;
         gl_Position = viewProjectionMatrix * worldPosition;                        
     }
 `;
